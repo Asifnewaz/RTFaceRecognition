@@ -7,12 +7,12 @@ from firebase_admin import credentials
 from firebase_admin import db
 from firebase_admin import  storage
 
+# ⛔️⛔️⛔️⛔️⛔️  commented
 # cred = credentials.Certificate("serviceAccountKey.json")
 # firebase_admin.initialize_app(cred, {
 #     'databaseURL': "",
 #     'storageBucket': ""
-# })
-
+# ⛔️⛔️⛔️⛔️⛔️
 
 # Importing student images
 folderPath = 'faces'
@@ -25,9 +25,11 @@ for path in pathList:
     studentIds.append(os.path.splitext(path)[0])
 
     fileName = f'{folderPath}/{path}'
+    # ⛔️⛔️⛔️⛔️⛔️  commented
     # bucket = storage.bucket()
     # blob = bucket.blob(fileName)
     # blob.upload_from_filename(fileName)
+    # ⛔️⛔️⛔️⛔️⛔️
 
 
     # print(path)
