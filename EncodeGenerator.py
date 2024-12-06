@@ -8,15 +8,19 @@ from firebase_admin import db
 from firebase_admin import  storage
 
 # ⛔️⛔️⛔️⛔️⛔️  commented
-# cred = credentials.Certificate("serviceAccountKey.json")
-# firebase_admin.initialize_app(cred, {
-#     'databaseURL': "",
-#     'storageBucket': ""
+cred = credentials.Certificate("serviceAccountKey.json")
+firebase_admin.initialize_app(cred, {
+    'databaseURL': "https://faceattendancerealtime-9e847-default-rtdb.firebaseio.com/",
+    'storageBucket': "faceattendancerealtime-9e847.firebasestorage.app"
+})
 # ⛔️⛔️⛔️⛔️⛔️
 
 # Importing student images
-folderPath = 'faces'
+folderPath = 'Images'
 pathList = os.listdir(folderPath)
+# Filter out .DS_Store or any non-image files
+pathList = [path for path in pathList if path != '.DS_Store']
+
 print(pathList)
 imgList = []
 studentIds = []
@@ -26,9 +30,9 @@ for path in pathList:
 
     fileName = f'{folderPath}/{path}'
     # ⛔️⛔️⛔️⛔️⛔️  commented
-    # bucket = storage.bucket()
-    # blob = bucket.blob(fileName)
-    # blob.upload_from_filename(fileName)
+    bucket = storage.bucket()
+    blob = bucket.blob(fileName)
+    blob.upload_from_filename(fileName)
     # ⛔️⛔️⛔️⛔️⛔️
 
 

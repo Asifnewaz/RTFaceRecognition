@@ -4,41 +4,41 @@ from firebase_admin import db
 
 cred = credentials.Certificate("serviceAccountKey.json")
 firebase_admin.initialize_app(cred, {
-    'databaseURL': ""
+    'databaseURL': "https://faceattendancerealtime-9e847-default-rtdb.firebaseio.com/"
 })
 
 ref = db.reference('Students')
 
 data = {
-    "321654":
+    "1446896":
         {
-            "name": "Murtaza Hassan",
-            "major": "Robotics",
-            "starting_year": 2017,
-            "total_attendance": 7,
-            "standing": "G",
-            "year": 4,
-            "last_attendance_time": "2022-12-11 00:54:34"
-        },
-    "852741":
-        {
-            "name": "Emly Blunt",
-            "major": "Economics",
-            "starting_year": 2021,
-            "total_attendance": 12,
-            "standing": "B",
+            "name": "Asif Newaz",
+            "major": "HIS",
+            "starting_year": 2024,
+            "total_attendance": 0,
+            "standing": "3",
             "year": 1,
-            "last_attendance_time": "2022-12-11 00:54:34"
+            "last_attendance_time": "2024-12-05 10:55:00"
         },
-    "963852":
+    "1420867":
         {
-            "name": "Elon Musk",
-            "major": "Physics",
-            "starting_year": 2020,
-            "total_attendance": 7,
-            "standing": "G",
-            "year": 2,
-            "last_attendance_time": "2022-12-11 00:54:34"
+            "name": "Mohsina Binte Asad",
+            "major": "HIS",
+            "starting_year": 2024,
+            "total_attendance": 0,
+            "standing": "1",
+            "year": 1,
+            "last_attendance_time": "2024-12-05 10:55:00"
+        },
+    "1547470":
+        {
+            "name": "Saiful Islam",
+            "major": "HIS",
+            "starting_year": 2024,
+            "total_attendance": 0,
+            "standing": "2",
+            "year": 1,
+            "last_attendance_time": "2024-12-05 10:55:00"
         }
 }
 
