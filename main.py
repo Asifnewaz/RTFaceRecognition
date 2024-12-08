@@ -11,7 +11,6 @@ from firebase_admin import storage
 import numpy as np
 from datetime import datetime
 
-# ⛔️⛔️⛔️⛔️⛔️  commented
 cred = credentials.Certificate("serviceAccountKey.json")
 firebase_admin.initialize_app(cred, {
     'databaseURL': "https://faceattendancerealtime-9e847-default-rtdb.firebaseio.com/",
@@ -19,7 +18,6 @@ firebase_admin.initialize_app(cred, {
 })
 
 bucket = storage.bucket()
-# ⛔️⛔️⛔️⛔️⛔️
 
 
 cap = cv2.VideoCapture(0)
