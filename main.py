@@ -22,7 +22,7 @@ bucket = storage.bucket()
 # ⛔️⛔️⛔️⛔️⛔️
 
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 cap.set(3, 640)
 cap.set(4, 480)
 
@@ -49,7 +49,7 @@ modeType = 0
 counter = 0
 id = -1
 imgStudent = []
-frame_skip = 2
+frame_skip = 5
 frame_count = 0
 
 while True:
@@ -91,9 +91,9 @@ while True:
                 imgBackground = cvzone.cornerRect(imgBackground, bbox, rt=0)
                 id = studentIds[matchIndex]
                 if counter == 0:
-                    cvzone.putTextRect(imgBackground, "Loading", (275, 400))
-                    cv2.imshow("Face Attendance", imgBackground)
-                    cv2.waitKey(1)
+                    # cvzone.putTextRect(imgBackground, "Loading", (275, 400))
+                    # cv2.imshow("Face Attendance", imgBackground)
+                    # cv2.waitKey(1)
                     counter = 1
                     modeType = 1
 
