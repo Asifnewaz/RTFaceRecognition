@@ -27,11 +27,9 @@ for path in pathList:
     studentIds.append(os.path.splitext(path)[0])
 
     fileName = f'{folderPath}/{path}'
-    # ⛔️⛔️⛔️⛔️⛔️  commented
     bucket = storage.bucket()
     blob = bucket.blob(fileName)
     blob.upload_from_filename(fileName)
-    # ⛔️⛔️⛔️⛔️⛔️
 
 
     # print(path)
