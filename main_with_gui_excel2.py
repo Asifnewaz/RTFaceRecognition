@@ -19,7 +19,7 @@ import threading        #Python threading allows you to have different parts of 
 import openpyxl                       #the use of threading here is to ensure that the face recognition process (start_recognition) runs in a separate thread from the main Tkinter GUI thread
 
 
-cred = credentials.Certificate("serviceAccountKey.json")
+cred = credentials.Certificate("serviceAccountKey2.json")
 firebase_admin.initialize_app(cred, {
     'databaseURL': "https://faceattendancerealtime-9e847-default-rtdb.firebaseio.com/",
     'storageBucket': "faceattendancerealtime-9e847.firebasestorage.app"
