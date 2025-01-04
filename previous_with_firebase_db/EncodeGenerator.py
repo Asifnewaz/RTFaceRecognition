@@ -14,7 +14,7 @@ firebase_admin.initialize_app(cred, {
 })
 
 # Importing student images
-folderPath = 'Images'
+folderPath = '../Faces'
 pathList = os.listdir(folderPath)
 # Filter out .DS_Store or any non-image files
 pathList = [path for path in pathList if path != '.DS_Store']
