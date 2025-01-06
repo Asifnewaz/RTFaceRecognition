@@ -66,14 +66,36 @@ class FaceRecognitionApp(QWidget):
         # Class ID Input
         self.class_id_input = QLineEdit()
         self.class_id_input.setPlaceholderText("Enter Class ID")
-        self.class_id_input.setStyleSheet("font-size: 16px; padding: 5px;")
-        layout.addWidget(self.class_id_input)
+        self.class_id_input.setFixedWidth(350)  # Set width to 350 px
+        self.class_id_input.setStyleSheet(
+            "font-size: 16px; padding: 5px; margin-bottom: 10px; border: 2px dotted gray; border-radius: 5px;"
+        )  # Added dotted border and set width
+        layout.addWidget(self.class_id_input, alignment=Qt.AlignCenter)
+
+        # Create a horizontal layout for the buttons
+        button_layout = QHBoxLayout()
 
         # Start Button
-        start_button = QPushButton("Start")
-        start_button.setStyleSheet("font-size: 16px; padding: 10px; background-color: green; color: white;")
+        start_button = QPushButton("Start attendance system")
+        start_button.setStyleSheet(
+            "font-size: 16px; padding: 10px; color: green; border: 2px dotted green; border-radius: 5px; margin-right: 10px;"
+        )  # Added dotted border and text color
         start_button.clicked.connect(self.start_countdown)
-        layout.addWidget(start_button)
+        button_layout.addWidget(start_button)
+
+        # Add another button horizontally
+        stop_button = QPushButton("Add new person")
+        stop_button.setStyleSheet(
+            "font-size: 16px; padding: 10px; color: red; border: 2px dotted red; border-radius: 5px; margin-left: 10px;"
+        )  # Added dotted border and text color
+        stop_button.clicked.connect(self.close)  # Example functionality to close the app
+        button_layout.addWidget(stop_button)
+
+        # Center-align the buttons
+        button_layout.setAlignment(Qt.AlignCenter)
+
+        # Add the horizontal button layout to the main vertical layout
+        layout.addLayout(button_layout)
 
         start_page.setLayout(layout)
         return start_page
