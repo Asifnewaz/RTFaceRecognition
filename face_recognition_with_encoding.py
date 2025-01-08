@@ -13,6 +13,8 @@ from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtCore import QTimer, QThread, pyqtSignal, Qt
 import os
 import time
+import openpyxl
+from datetime import datetime
 
 class CountdownThread(QThread):
     countdown_signal = pyqtSignal(int)
@@ -225,6 +227,11 @@ class FaceRecognitionApp(QWidget):
                 msg.setStandardButtons(QMessageBox.Ok)
                 msg.exec_()
             else:
+
+                # Save attendance and update labels
+                self.detected_faces.add(result)
+                self.save_to_spreadsheet(result)  # Call to save the details in spreadsheet
+
                 # Save attendance and update labels
                 self.detected_faces.add(result)
                 # Show success message
@@ -238,6 +245,38 @@ class FaceRecognitionApp(QWidget):
         self.processing = False
         self.pause_processing = False
 
+    def save_to_spreadsheet(self, user_id):
+        # Define the spreadsheet path
+        file_path = "attendance.xlsx"
+
+        # Load or create the workbook
+        if os.path.exists(file_path):
+            workbook = openpyxl.load_workbook(file_path)
+        else:
+            workbook = openpyxl.Workbook()
+
+        sheet = workbook.active
+        # Check if the headers exist
+        if sheet.max_row == 1:
+            sheet.append(["ID", "Name", "Time"])
+
+        # Append the data (ID, Name, and current time)
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        sheet.append([user_id, self.get_name_from_id(user_id), current_time])
+
+        # Save the workbook
+        workbook.save(file_path)
+
+    def get_name_from_id(self, user_id):
+        # You can define a method to get the name based on the ID,
+        # you could have a dictionary or another method to map IDs to names
+        # Example:
+        name_mapping = {
+            '1': 'John Doe',
+            '2': 'Jane Smith',
+            # Add other IDs and names
+        }
+        return name_mapping.get(user_id, "Unknown")
 
     def process_frame(self, image):
         # Convert BGR (OpenCV) to RGB (face_recognition library)
