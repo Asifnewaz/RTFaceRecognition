@@ -149,7 +149,20 @@ class FaceRecognitionApp(QWidget):
         self.countdown_thread.start()
 
     def update_countdown(self, value):
-        self.countdown_label.setText( "Loading data . . . " + str(value))
+        messages = {3: "Preparing data...", 2: "Loading data...", 1: "Fetching data..."}
+        if value in messages:
+            full_message = messages[value]
+            self.text_animation_index = 0  # Reset animation index
+            self.text_animation_timer = QTimer()
+            self.text_animation_timer.timeout.connect(lambda: self.animate_text(full_message))
+            self.text_animation_timer.start(100)  # Adjust timing for each letter
+
+    def animate_text(self, full_message):
+        if self.text_animation_index <= len(full_message):
+            self.countdown_label.setText(full_message[:self.text_animation_index])
+            self.text_animation_index += 1
+        else:
+            self.text_animation_timer.stop()
 
     def start_video_feed(self):
         self.stack.setCurrentWidget(self.video_feed_page)
