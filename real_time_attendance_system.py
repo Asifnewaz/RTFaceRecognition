@@ -228,12 +228,20 @@ class FaceRecognitionApp(QWidget):
         ret, frame = self.cap.read()
 
         if ret:
-            # Resize frame to center the face
-            height, width, _ = frame.shape
-            crop_size = min(height, width)
-            start_x = (width - crop_size) // 2
-            start_y = (height - crop_size) // 2
-            frame = frame[start_y:start_y + crop_size, start_x:start_x + crop_size]
+            # Resize frame to aspect fill
+            frame_height, frame_width, _ = frame.shape
+            target_aspect = self.videoFeedWidth / self.videoFeedHeight
+            frame_aspect = frame_width / frame_height
+
+            if frame_aspect > target_aspect:
+                new_width = int(frame_height * target_aspect)
+                offset = (frame_width - new_width) // 2
+                frame = frame[:, offset:offset + new_width]
+            else:
+                new_height = int(frame_width / target_aspect)
+                offset = (frame_height - new_height) // 2
+                frame = frame[offset:offset + new_height, :]
+
             frame = cv2.resize(frame, (self.videoFeedWidth, self.videoFeedHeight))
 
             # Update video feed
