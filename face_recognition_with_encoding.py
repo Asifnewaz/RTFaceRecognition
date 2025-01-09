@@ -55,9 +55,9 @@ class FaceRecognitionApp(QWidget):
         # Load the encoding file
         print("Loading Encode File ...")
         file = open('EncodeFile.p', 'rb')
-        encodeListKnownWithIds = pickle.load(file)
+        encode_list_known_with_ids = pickle.load(file)
         file.close()
-        self.encodeListKnown, self.studentIds = encodeListKnownWithIds
+        self.encodeListKnown, self.studentIds = encode_list_known_with_ids
 
 
         self.detected_faces = set()
