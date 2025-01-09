@@ -10,6 +10,7 @@ from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtCore import QTimer, QThread, pyqtSignal, Qt
 import os
 import time
+# With CNN
 
 class CountdownThread(QThread):
     countdown_signal = pyqtSignal(int)
