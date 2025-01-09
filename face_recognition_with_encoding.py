@@ -29,6 +29,11 @@ class FaceRecognitionApp(QWidget):
         super().__init__()
 
         # Initialize main stacked widget
+        self.time_label = None
+        self.id_label = None
+        self.ready_button = None
+        self.ready_button_clicked = False
+
         self.stack = QStackedWidget()
         self.setWindowTitle("Face Recognition App")
         self.setGeometry(100, 100, 800, 600)
@@ -106,32 +111,55 @@ class FaceRecognitionApp(QWidget):
         video_feed_page = QWidget()
         layout = QHBoxLayout()
 
-        # Video Feed Layout
+        # Camera Feed Layout (Left Side)
         video_layout = QVBoxLayout()
         self.video_feed = QLabel()
-        self.video_feed.setFixedSize(640, 480)
+        self.video_feed.setFixedSize(500, 375)  # Set video feed width to 500px
         video_layout.addWidget(self.video_feed)
+        layout.addLayout(video_layout)
 
-        # Info Layout
-        info_layout = QVBoxLayout()
+        # Controls and Info Layout (Right Side)
+        controls_layout = QVBoxLayout()
+
+        # Spacer for top alignment
+        controls_layout.addStretch()
+
+        # Ready Button Right Centered
+        self.ready_button = QPushButton("Ready")
+        self.ready_button.setStyleSheet(
+            "font-size: 16px; padding: 10px; color: white; background-color: green; border: none; border-radius: 5px;"
+        )
+        self.ready_button.clicked.connect(self.enable_processing)
+        controls_layout.addWidget(self.ready_button, alignment=Qt.AlignVCenter | Qt.AlignRight)
+
+        # Spacer for bottom alignment
+        controls_layout.addStretch()
+
+        # ID Label
         self.id_label = QLabel("ID: ")
         self.id_label.setStyleSheet("font-size: 16px;")
-        info_layout.addWidget(self.id_label)
+        self.id_label.setVisible(False)
+        controls_layout.addWidget(self.id_label)
 
+        # Time Label
         self.time_label = QLabel("Time: ")
         self.time_label.setStyleSheet("font-size: 16px;")
-        info_layout.addWidget(self.time_label)
+        self.time_label.setVisible(False)
+        controls_layout.addWidget(self.time_label)
 
-        self.loader_label = QLabel("Processing...")
-        self.loader_label.setStyleSheet("font-size: 16px; color: blue;")
-        self.loader_label.setVisible(False)
-        info_layout.addWidget(self.loader_label)
+        # Spacer for alignment
+        controls_layout.addStretch()
 
-        layout.addLayout(video_layout)
-        layout.addLayout(info_layout)
+        layout.addLayout(controls_layout)
         video_feed_page.setLayout(layout)
 
         return video_feed_page
+
+    def enable_processing(self):
+        # Enable image processing when the "Ready" button is clicked
+        self.ready_button.setVisible(False)  # Hide the button
+        self.pause_processing = False  # Allow processing to start
+        self.ready_button_clicked = True
 
     def start_countdown(self):
         self.class_id = self.class_id_input.text().strip()
@@ -197,10 +225,12 @@ class FaceRecognitionApp(QWidget):
             if self.pause_processing:
                 return
 
+            if not self.ready_button_clicked:
+                return
+
             # If not processing, trigger detection
             if not self.processing:
                 self.processing = True
-                self.loader_label.setVisible(True)
                 QTimer.singleShot(500, lambda: self.handle_detection(frame))
 
     def handle_detection(self, frame):
@@ -211,39 +241,41 @@ class FaceRecognitionApp(QWidget):
             # Clear labels if no face is detected
             self.id_label.setText("ID: ")
             self.time_label.setText("Time: ")
-            self.loader_label.setVisible(False)
         else:
-
             self.id_label.setText(f"ID: {result}")
             self.time_label.setText(f"Time: {time.strftime('%H:%M:%S')}")
-            self.loader_label.setVisible(False)
+            self.id_label.setVisible(True)
+            self.time_label.setVisible(True)
 
             if result in self.detected_faces:
-
-                # Show message if attendance is already saved
                 msg = QMessageBox()
                 msg.setWindowTitle("Attendance Saved")
                 msg.setText("User already marked present.")
                 msg.setStandardButtons(QMessageBox.Ok)
-                msg.exec_()
+                response = msg.exec_()  # Capture the response
+                if response == QMessageBox.Ok:
+                    self.resetData()
             else:
-
-                # Save attendance and update labels
                 self.detected_faces.add(result)
-                self.save_to_spreadsheet(result)  # Call to save the details in spreadsheet
+                self.save_to_spreadsheet(result)
 
-                # Save attendance and update labels
-                self.detected_faces.add(result)
-                # Show success message
                 msg = QMessageBox()
                 msg.setWindowTitle("Recognition Success")
                 msg.setText("User recognized successfully!")
                 msg.setStandardButtons(QMessageBox.Ok)
-                msg.exec_()
+                response = msg.exec_()  # Capture the response
+                if response == QMessageBox.Ok:
+                    self.resetData()
 
-        # Resume processing
         self.processing = False
         self.pause_processing = False
+
+    def resetData(self):
+        print("OK button was clicked.")
+        self.ready_button.setVisible(True)
+        self.ready_button_clicked = False
+        self.id_label.setVisible(False)
+        self.time_label.setVisible(False)
 
     def save_to_spreadsheet(self, user_id):
         # Define the spreadsheet path
