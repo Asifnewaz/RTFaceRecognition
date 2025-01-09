@@ -254,7 +254,7 @@ class FaceRecognitionApp(QWidget):
                 msg.setStandardButtons(QMessageBox.Ok)
                 response = msg.exec_()  # Capture the response
                 if response == QMessageBox.Ok:
-                    self.resetData()
+                    self.reset_data()
             else:
                 self.detected_faces.add(result)
                 self.save_to_spreadsheet(result)
@@ -265,12 +265,12 @@ class FaceRecognitionApp(QWidget):
                 msg.setStandardButtons(QMessageBox.Ok)
                 response = msg.exec_()  # Capture the response
                 if response == QMessageBox.Ok:
-                    self.resetData()
+                    self.reset_data()
 
         self.processing = False
         self.pause_processing = False
 
-    def resetData(self):
+    def reset_data(self):
         print("OK button was clicked.")
         self.ready_button.setVisible(True)
         self.ready_button_clicked = False
