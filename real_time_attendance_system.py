@@ -28,6 +28,21 @@ class FaceRecognitionApp(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.video_feed = None
+        self.windowTitle = "Face Recognition"
+        self.windowWidth = 1200
+        self.windowHeight = 800
+        self.windowBackgroundColor = "background-color: #d8dee9;"
+
+        self.videoFeedWidth = 800
+        self.videoFeedHeight = 533
+        self.right_panelWidth = 340
+        self.right_panelHeight = 760
+
+        self.padding = 20
+        self.rightPadding = 20
+        self.topPadding = 20
+
         # Initialize main stacked widget
         self.time_label = None
         self.id_label = None
@@ -35,8 +50,9 @@ class FaceRecognitionApp(QWidget):
         self.ready_button_clicked = False
 
         self.stack = QStackedWidget()
-        self.setWindowTitle("Face Recognition App")
-        self.setGeometry(100, 100, 800, 600)
+        self.setWindowTitle(self.windowTitle)
+        self.setGeometry(0,0, self.windowWidth, self.windowHeight)
+        self.setStyleSheet(self.windowBackgroundColor)  # Set window background color
 
         # Create pages
         self.start_page = self.create_start_page()
@@ -49,6 +65,8 @@ class FaceRecognitionApp(QWidget):
 
         # Set layout
         main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(0, 0, 0, 0)  # Remove default layout margins
+        main_layout.setSpacing(0)  # Remove spacing between widgets
         main_layout.addWidget(self.stack)
         self.setLayout(main_layout)
 
@@ -109,50 +127,53 @@ class FaceRecognitionApp(QWidget):
 
     def create_video_feed_page(self):
         video_feed_page = QWidget()
-        layout = QHBoxLayout()
+        video_feed_page.setStyleSheet("background-color: #d8dee9;")  # Set window background color
 
-        # Camera Feed Layout (Left Side)
-        video_layout = QVBoxLayout()
-        self.video_feed = QLabel()
-        self.video_feed.setFixedSize(500, 375)  # Set video feed width to 500px
-        video_layout.addWidget(self.video_feed)
-        layout.addLayout(video_layout)
+        # Camera Feed (Left Panel)
+        self.video_feed = QLabel(video_feed_page)
+        self.video_feed.setGeometry(self.padding, 133, self.videoFeedWidth, self.videoFeedHeight)  # Left: 20, Top: 133, Width: 800, Height: 533
+        self.video_feed.setStyleSheet("background-color: #ffffff; border: 1px solid #b0bec5;")
 
-        # Controls and Info Layout (Right Side)
-        controls_layout = QVBoxLayout()
-
-        # Spacer for top alignment
-        controls_layout.addStretch()
-
-        # Ready Button Right Centered
-        self.ready_button = QPushButton("Ready")
-        self.ready_button.setStyleSheet(
-            "font-size: 16px; padding: 10px; color: white; background-color: green; border: none; border-radius: 5px;"
-        )
-        self.ready_button.clicked.connect(self.enable_processing)
-        controls_layout.addWidget(self.ready_button, alignment=Qt.AlignVCenter | Qt.AlignRight)
-
-        # Spacer for bottom alignment
-        controls_layout.addStretch()
+        # Right Panel
+        right_panel = QWidget(video_feed_page)
+        right_panel.setGeometry(self.windowWidth - (self.right_panelWidth + self.padding), self.padding, self.right_panelWidth, self.right_panelHeight)  # Right: 860, Top: 20, Width: 340, Height: 760
+        right_panel.setStyleSheet("background-color: #e5e9f0; border: 0px solid #b0bec5; border-radius: 8px;")
 
         # ID Label
-        self.id_label = QLabel("ID: ")
+        self.id_label = QLabel("ID: 1446896", right_panel)
+        self.id_label.setGeometry(self.padding, 133, 300, 30)
         self.id_label.setStyleSheet("font-size: 16px;")
-        self.id_label.setVisible(False)
-        controls_layout.addWidget(self.id_label)
+
+        # Name Label
+        self.name_label = QLabel("Name: Asif Newaz", right_panel)
+        self.name_label.setGeometry(self.padding, 173, 300, 30)
+        self.name_label.setStyleSheet("font-size: 16px;")
 
         # Time Label
-        self.time_label = QLabel("Time: ")
+        self.time_label = QLabel("Time: 10:30 AM", right_panel)
+        self.time_label.setGeometry(self.padding, 213, 300, 30)
         self.time_label.setStyleSheet("font-size: 16px;")
-        self.time_label.setVisible(False)
-        controls_layout.addWidget(self.time_label)
 
-        # Spacer for alignment
-        controls_layout.addStretch()
+        # Date Label
+        self.date_label = QLabel("Date: 10/01/2025", right_panel)
+        self.date_label.setGeometry(self.padding, 253, 300, 30)
+        self.date_label.setStyleSheet("font-size: 16px;")
 
-        layout.addLayout(controls_layout)
-        video_feed_page.setLayout(layout)
+        # Attendance Status Label
+        self.attendance_label = QLabel("Attendance Marked", right_panel)
+        self.attendance_label.setGeometry(self.padding, 500, 300, 30)
+        self.attendance_label.setStyleSheet("font-size: 16px; color: green;")
 
+        # Ready Button
+        self.ready_button = QPushButton("Ready", right_panel)
+        self.ready_button.setGeometry((self.right_panelWidth - 100) // 2, (self.right_panelHeight - 40) // 2, 100,
+                                      40)  # Center the button
+        self.ready_button.setStyleSheet(
+            "font-size: 16px; padding: 10px; color: white; background-color: green; border: none; border-radius: 8px;"
+        )
+        self.ready_button.clicked.connect(self.enable_processing)
+
+        self.reset_data()
         return video_feed_page
 
     def enable_processing(self):
@@ -213,7 +234,7 @@ class FaceRecognitionApp(QWidget):
             start_x = (width - crop_size) // 2
             start_y = (height - crop_size) // 2
             frame = frame[start_y:start_y + crop_size, start_x:start_x + crop_size]
-            frame = cv2.resize(frame, (640, 480))
+            frame = cv2.resize(frame, (self.videoFeedWidth, self.videoFeedHeight))
 
             # Update video feed
             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -246,6 +267,9 @@ class FaceRecognitionApp(QWidget):
             self.time_label.setText(f"Time: {time.strftime('%H:%M:%S')}")
             self.id_label.setVisible(True)
             self.time_label.setVisible(True)
+            self.date_label.setVisible(True)
+            self.name_label.setVisible(True)
+            self.attendance_label.setVisible(True)
 
             if result in self.detected_faces:
                 msg = QMessageBox()
@@ -276,6 +300,9 @@ class FaceRecognitionApp(QWidget):
         self.ready_button_clicked = False
         self.id_label.setVisible(False)
         self.time_label.setVisible(False)
+        self.date_label.setVisible(False)
+        self.name_label.setVisible(False)
+        self.attendance_label.setVisible(False)
 
     def save_to_spreadsheet(self, user_id):
         # Define the spreadsheet path
