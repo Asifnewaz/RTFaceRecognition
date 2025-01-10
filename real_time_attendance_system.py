@@ -28,6 +28,9 @@ class FaceRecognitionApp(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.attendance_label = None
+        self.date_label = None
+        self.name_label = None
         self.video_feed = None
         self.windowTitle = "Face Recognition"
         self.windowWidth = 1200
@@ -140,36 +143,36 @@ class FaceRecognitionApp(QWidget):
         right_panel.setStyleSheet("background-color: #e5e9f0; border: 0px solid #b0bec5; border-radius: 8px;")
 
         # ID Label
-        self.id_label = QLabel("ID: 1446896", right_panel)
-        self.id_label.setGeometry(self.padding, 133, 300, 30)
-        self.id_label.setStyleSheet("font-size: 16px;")
+        self.id_label = QLabel("ID: ", right_panel)
+        self.id_label.setGeometry(self.padding, 113, 300, 30)
+        self.id_label.setStyleSheet("font-size: 18px;")
 
         # Name Label
-        self.name_label = QLabel("Name: Asif Newaz", right_panel)
-        self.name_label.setGeometry(self.padding, 173, 300, 30)
-        self.name_label.setStyleSheet("font-size: 16px;")
+        self.name_label = QLabel("Name: ", right_panel)
+        self.name_label.setGeometry(self.padding, 163, 300, 30)
+        self.name_label.setStyleSheet("font-size: 18px;")
 
         # Time Label
-        self.time_label = QLabel("Time: 10:30 AM", right_panel)
-        self.time_label.setGeometry(self.padding, 213, 300, 30)
-        self.time_label.setStyleSheet("font-size: 16px;")
+        self.time_label = QLabel("Time: ", right_panel)
+        self.time_label.setGeometry(self.padding, 203, 300, 30)
+        self.time_label.setStyleSheet("font-size: 18px;")
 
         # Date Label
-        self.date_label = QLabel("Date: 10/01/2025", right_panel)
-        self.date_label.setGeometry(self.padding, 253, 300, 30)
-        self.date_label.setStyleSheet("font-size: 16px;")
+        self.date_label = QLabel("Date: ", right_panel)
+        self.date_label.setGeometry(self.padding, 243, 300, 30)
+        self.date_label.setStyleSheet("font-size: 18px;")
 
         # Attendance Status Label
         self.attendance_label = QLabel("Attendance Marked", right_panel)
-        self.attendance_label.setGeometry(self.padding, 500, 300, 30)
-        self.attendance_label.setStyleSheet("font-size: 16px; color: green;")
+        self.attendance_label.setGeometry(self.padding, 620, 300, 30)
+        self.attendance_label.setStyleSheet("font-size: 18px; color: green;")
 
         # Ready Button
         self.ready_button = QPushButton("Ready", right_panel)
         self.ready_button.setGeometry((self.right_panelWidth - 100) // 2, (self.right_panelHeight - 40) // 2, 100,
                                       40)  # Center the button
         self.ready_button.setStyleSheet(
-            "font-size: 16px; padding: 10px; color: white; background-color: green; border: none; border-radius: 8px;"
+            "font-size: 18px; padding: 10px; color: white; background-color: green; border: none; border-radius: 8px;"
         )
         self.ready_button.clicked.connect(self.enable_processing)
 
@@ -200,13 +203,13 @@ class FaceRecognitionApp(QWidget):
         self.countdown_thread.start()
 
     def update_countdown(self, value):
-        messages = {3: "Preparing data...", 2: "Loading data...", 1: "Fetching data..."}
+        messages = {3: "Preparing data ...", 2: "Loading data ...", 1: "Fetching data ..."}
         if value in messages:
             full_message = messages[value]
             self.text_animation_index = 0  # Reset animation index
             self.text_animation_timer = QTimer()
             self.text_animation_timer.timeout.connect(lambda: self.animate_text(full_message))
-            self.text_animation_timer.start(100)  # Adjust timing for each letter
+            self.text_animation_timer.start(50)  # Adjust timing for each letter
 
     def animate_text(self, full_message):
         if self.text_animation_index <= len(full_message):
@@ -269,10 +272,23 @@ class FaceRecognitionApp(QWidget):
         if result == "Unknown":
             # Clear labels if no face is detected
             self.id_label.setText("ID: ")
+            self.name_label.setText("Name: ")
             self.time_label.setText("Time: ")
+            self.date_label.setText("Date: ")
         else:
-            self.id_label.setText(f"ID: {result}")
-            self.time_label.setText(f"Time: {time.strftime('%H:%M:%S')}")
+            # Separate ID and Name from the result
+            user_id, user_name = result.split("_", 1)
+
+            self.id_label.setText(f"ID: {user_id}")
+            self.name_label.setText(f"Name: {user_name}")
+
+            # Update time and date labels separately
+            current_time = time.strftime('%I:%M:%S %p')  # Format time as 12-hour with AM/PM
+            current_date = datetime.now().strftime('%Y-%m-%d')
+
+            self.time_label.setText(f"Time: {current_time}")
+            self.date_label.setText(f"Date: {current_date}")
+
             self.id_label.setVisible(True)
             self.time_label.setVisible(True)
             self.date_label.setVisible(True)

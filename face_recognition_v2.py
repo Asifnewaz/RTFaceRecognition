@@ -609,5 +609,5 @@ if __name__ == "__main__":
 #     app = FaceRecognitionApp()
 #
 #     # Example usage:
-#     app.process_image("images/person2/1547470.png")
+#     app.process_image("images/person2/1547470_Elon Mask.png")
 #     # Use external scripts to integrate or call this class for GUI if needed.
