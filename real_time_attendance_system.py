@@ -1,5 +1,8 @@
 import pickle
-
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import db
+from firebase_admin import storage
 import face_recognition
 from keras.src.models import Sequential
 from keras.src.layers import Conv2D, MaxPooling2D, Flatten, Dense
@@ -15,6 +18,11 @@ import os
 import time
 import openpyxl
 from datetime import datetime
+
+cred = credentials.Certificate("serviceAccountKey2.json")
+firebase_admin.initialize_app(cred, {
+    'databaseURL': "https://faceattendancerealtime-9e847-default-rtdb.firebaseio.com/"
+})
 
 class CountdownThread(QThread):
     countdown_signal = pyqtSignal(int)
@@ -86,6 +94,22 @@ class FaceRecognitionApp(QWidget):
         self.processing = False  # Initialize processing
         self.cap = None
         self.timer = None
+        
+        # Load CNN model
+        self.model_path = "pretrained_face_model.h5"
+        self.model = self.load_model()
+        self.class_ids = ""  # To store class ID
+        self.detected_facess = set()
+
+
+    def load_model(self):
+        try:
+            model = load_model(self.model_path, compile=False)
+            model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+            return model
+        except Exception as e:
+            print(f"Failed to load model: {e}")
+            exit()
 
     def create_start_page(self):
         start_page = QWidget()
@@ -328,7 +352,7 @@ class FaceRecognitionApp(QWidget):
         self.name_label.setVisible(False)
         self.attendance_label.setVisible(False)
 
-    def save_to_spreadsheet(self, user_id):
+    def save_to_spreadsheet(self, result):
         # Define the spreadsheet path
         file_path = "attendance.xlsx"
 
@@ -343,12 +367,24 @@ class FaceRecognitionApp(QWidget):
         if sheet.max_row == 1:
             sheet.append(["ID", "Name", "Time"])
 
+        # Separate ID and Name from the result
+        id, user_name = result.split("_", 1)
+
+
         # Append the data (ID, Name, and current time)
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        sheet.append([user_id, self.get_name_from_id(user_id), current_time])
+        sheet.append([id, self.get_name_from_id(user_name), current_time])
 
         # Save the workbook
         workbook.save(file_path)
+
+        # save date to realtime db
+        studentInfo = db.reference(f'Students/{id}').get()
+        print(studentInfo)
+        ref = db.reference(f'Students/{id}')
+        studentInfo['total_attendance'] += 1
+        ref.child('total_attendance').set(studentInfo['total_attendance'])
+        ref.child('last_attendance_time').set(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
     def get_name_from_id(self, user_id):
         # You can define a method to get the name based on the ID,
