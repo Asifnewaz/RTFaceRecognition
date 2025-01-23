@@ -7,11 +7,11 @@ from firebase_admin import credentials
 from firebase_admin import db
 from firebase_admin import  storage
 
-cred = credentials.Certificate("serviceAccountKey2.json")
-firebase_admin.initialize_app(cred, {
-    'databaseURL': "https://faceattendancerealtime-9e847-default-rtdb.firebaseio.com/",
-    'storageBucket': "faceattendancerealtime-9e847.firebasestorage.app"
-})
+# cred = credentials.Certificate("serviceAccountKey2.json")
+# firebase_admin.initialize_app(cred, {
+#     'databaseURL': "https://faceattendancerealtime-9e847-default-rtdb.firebaseio.com/",
+    # 'storageBucket': "faceattendancerealtime-9e847.firebasestorage.app"
+# })
 
 # Importing student images
 folderPath = '../Faces'
@@ -27,9 +27,9 @@ for path in pathList:
     studentIds.append(os.path.splitext(path)[0])
 
     fileName = f'{folderPath}/{path}'
-    bucket = storage.bucket()
-    blob = bucket.blob(fileName)
-    blob.upload_from_filename(fileName)
+    # bucket = storage.bucket()
+    # blob = bucket.blob(fileName)
+    # blob.upload_from_filename(fileName)
 
 
     # print(path)
