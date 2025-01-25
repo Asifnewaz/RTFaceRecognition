@@ -84,11 +84,11 @@ class FaceRecognitionApp(QWidget):
         self.setLayout(main_layout)
 
         # Load the encoding file
-        print("Loading Encode File ...")
-        file = open('EncodeFile.p', 'rb')
-        encode_list_known_with_ids = pickle.load(file)
-        file.close()
-        self.encodeListKnown, self.studentIds = encode_list_known_with_ids
+        # print("Loading Encode File ...")
+        # file = open('EncodeFile.p', 'rb')
+        # encode_list_known_with_ids = pickle.load(file)
+        # file.close()
+        # self.encodeListKnown, self.studentIds = encode_list_known_with_ids
 
 
         self.detected_faces = set()
@@ -236,6 +236,14 @@ class FaceRecognitionApp(QWidget):
             self.text_animation_timer = QTimer()
             self.text_animation_timer.timeout.connect(lambda: self.animate_text(full_message))
             self.text_animation_timer.start(50)  # Adjust timing for each letter
+            if value == 3:
+                print("Loading Encode File ...")
+                class_id = self.class_id_input.text().strip()
+                fileName = class_id + "_model.p"
+                file = open(fileName, 'rb')
+                encode_list_known_with_ids = pickle.load(file)
+                file.close()
+                self.encodeListKnown, self.studentIds = encode_list_known_with_ids
 
     def animate_text(self, full_message):
         if self.text_animation_index <= len(full_message):
@@ -367,15 +375,23 @@ class FaceRecognitionApp(QWidget):
         sheet = workbook.active
         # Check if the headers exist
         if sheet.max_row == 1:
-            sheet.append(["ID", "Name", "Time"])
+            sheet.append(["ID", "Name", "Date", "Time"])
 
         # Separate ID and Name from the result
         id, user_name = result.split("_", 1)
 
+        # Get the current date and time
+        current_date = datetime.now().strftime("%Y-%m-%d")
+        current_time = datetime.now().strftime("%H:%M:%S")
 
-        # Append the data (ID, Name, and current time)
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        sheet.append([id, self.get_name_from_id(user_name), current_time])
+        # Check if the ID and date already exist in the sheet
+        for row in sheet.iter_rows(min_row=2, values_only=True):
+            if row[0] == id and row[2] == current_date:
+                print("Duplicate entry found. Skipping.")
+                return
+
+        # Append the data (ID, Name, Date, and Time)
+        sheet.append([id, user_name, current_date, current_time])
 
         # Save the workbook
         workbook.save(file_path)
@@ -387,17 +403,6 @@ class FaceRecognitionApp(QWidget):
         studentInfo['total_attendance'] += 1
         ref.child('total_attendance').set(studentInfo['total_attendance'])
         ref.child('last_attendance_time').set(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
-    def get_name_from_id(self, user_id):
-        # You can define a method to get the name based on the ID,
-        # you could have a dictionary or another method to map IDs to names
-        # Example:
-        name_mapping = {
-            '1': 'John Doe',
-            '2': 'Jane Smith',
-            # Add other IDs and names
-        }
-        return name_mapping.get(user_id, "Unknown")
 
     def process_frame(self, image):
         # Convert BGR (OpenCV) to RGB (face_recognition library)
