@@ -20,7 +20,7 @@ import openpyxl
 from datetime import datetime
 from AddPersonPage import AddPersonPage
 
-cred = credentials.Certificate("serviceAccountKey2.json")
+cred = credentials.Certificate("secrets/serviceAccountKey2.json")
 firebase_admin.initialize_app(cred, {
     'databaseURL': "https://faceattendancerealtime-9e847-default-rtdb.firebaseio.com/"
 })
@@ -98,10 +98,10 @@ class FaceRecognitionApp(QWidget):
         self.timer = None
 
         # Load CNN model
-        self.model_path = "pretrained_face_model.h5"
-        self.model = self.load_model()
-        self.class_ids = ""  # To store class ID
-        self.detected_facess = set()
+        # self.model_path = "pretrained_face_model.h5"
+        # self.model = self.load_model()
+        # self.class_ids = ""  # To store class ID
+        # self.detected_facess = set()
 
 
     def load_model(self):
@@ -385,10 +385,10 @@ class FaceRecognitionApp(QWidget):
         current_time = datetime.now().strftime("%H:%M:%S")
 
         # Check if the ID and date already exist in the sheet
-        for row in sheet.iter_rows(min_row=2, values_only=True):
-            if row[0] == id and row[2] == current_date:
-                print("Duplicate entry found. Skipping.")
-                return
+        # for row in sheet.iter_rows(min_row=2, values_only=True):
+        #     if row[0] == id and row[2] == current_date:
+        #         print("Duplicate entry found. Skipping.")
+        #         return
 
         # Append the data (ID, Name, Date, and Time)
         sheet.append([id, user_name, current_date, current_time])
@@ -396,13 +396,18 @@ class FaceRecognitionApp(QWidget):
         # Save the workbook
         workbook.save(file_path)
 
-        # save date to realtime db
-        studentInfo = db.reference(f'Students/{id}').get()
-        print(studentInfo)
-        ref = db.reference(f'Students/{id}')
-        studentInfo['total_attendance'] += 1
-        ref.child('total_attendance').set(studentInfo['total_attendance'])
-        ref.child('last_attendance_time').set(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        # Save data to Realtime DB for the specific class ID
+        self.update_realtime_db(id, user_name, current_date, current_time)
+
+    def update_realtime_db(self, student_id, name, date, time):
+        ref = db.reference(f'Attendances/{self.class_id}')
+        student_data = {
+            "name": name,
+            "ID": student_id,
+            "Date": date,
+            "Time": time
+        }
+        ref.child(student_id).set(student_data)
 
     def process_frame(self, image):
         # Convert BGR (OpenCV) to RGB (face_recognition library)
@@ -418,8 +423,6 @@ class FaceRecognitionApp(QWidget):
             for encodeFace, faceLoc in zip(encode_cur_frame, face_locations):
                 matches = face_recognition.compare_faces(self.encodeListKnown, encodeFace)
                 faceDis = face_recognition.face_distance(self.encodeListKnown, encodeFace)
-                # print("matches", matches)
-                # print("faceDis", faceDis)
 
                 match_index = np.argmin(faceDis)
                 # print("Match Index", matchIndex)
