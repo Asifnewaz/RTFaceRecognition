@@ -38,6 +38,9 @@ class FaceRecognitionApp(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.id = None
+        self.encodeListKnown = None
+        self.studentIds = None
         self.attendance_label = None
         self.date_label = None
         self.name_label = None
@@ -60,6 +63,7 @@ class FaceRecognitionApp(QWidget):
         self.time_label = None
         self.id_label = None
         self.ready_button = None
+        self.back_button = None
         self.ready_button_clicked = False
 
         self.stack = QStackedWidget()
@@ -82,14 +86,6 @@ class FaceRecognitionApp(QWidget):
         main_layout.setSpacing(0)  # Remove spacing between widgets
         main_layout.addWidget(self.stack)
         self.setLayout(main_layout)
-
-        # Load the encoding file
-        # print("Loading Encode File ...")
-        # file = open('EncodeFile.p', 'rb')
-        # encode_list_known_with_ids = pickle.load(file)
-        # file.close()
-        # self.encodeListKnown, self.studentIds = encode_list_known_with_ids
-
 
         self.detected_faces = set()
         self.pause_processing = False  # Initialize pause_processing
@@ -202,12 +198,36 @@ class FaceRecognitionApp(QWidget):
         )
         self.ready_button.clicked.connect(self.enable_processing)
 
+        self.back_button = QPushButton("Back", right_panel)
+        self.back_button.setGeometry((self.right_panelWidth - 100) // 2, (self.right_panelHeight + 220) // 2, 100,
+                                      40)  # Center the button
+        self.back_button.setStyleSheet(
+            "font-size: 18px; padding: 10px; color: white; background-color: red; border: none; border-radius: 8px;"
+        )
+        self.back_button.clicked.connect(self.back_to_initial_state)
+
         self.reset_data()
         return video_feed_page
+
+    def back_to_initial_state(self):
+        # Stop the camera and release resources
+        self.ready_button_clicked = False
+        self.encodeListKnown = None
+        self.studentIds = None
+        if self.cap and self.cap.isOpened():
+            self.cap.release()
+
+        # Stop the timer if running
+        if self.timer:
+            self.timer.stop()
+
+        # Reset to start page
+        self.stack.setCurrentWidget(self.start_page)
 
     def enable_processing(self):
         # Enable image processing when the "Ready" button is clicked
         self.ready_button.setVisible(False)  # Hide the button
+        self.back_button.setVisible(False)  # Hide the button
         self.pause_processing = False  # Allow processing to start
         self.ready_button_clicked = True
 
@@ -225,8 +245,14 @@ class FaceRecognitionApp(QWidget):
 
         self.countdown_thread = CountdownThread()
         self.countdown_thread.countdown_signal.connect(self.update_countdown)
-        self.countdown_thread.finished.connect(self.start_video_feed)
+        self.countdown_thread.finished.connect(self.validate_and_start_video_feed)
         self.countdown_thread.start()
+
+    def validate_and_start_video_feed(self):
+        if self.encodeListKnown is not None:
+            self.start_video_feed()
+        else:
+            self.stack.setCurrentWidget(self.start_page)
 
     def update_countdown(self, value):
         messages = {3: "Preparing data ...", 2: "Loading data ...", 1: "Fetching data ..."}
@@ -235,15 +261,22 @@ class FaceRecognitionApp(QWidget):
             self.text_animation_index = 0  # Reset animation index
             self.text_animation_timer = QTimer()
             self.text_animation_timer.timeout.connect(lambda: self.animate_text(full_message))
-            self.text_animation_timer.start(50)  # Adjust timing for each letter
-            if value == 3:
+            if value == 1:
                 print("Loading Encode File ...")
                 class_id = self.class_id_input.text().strip()
                 fileName = class_id + "_model.p"
-                file = open(fileName, 'rb')
-                encode_list_known_with_ids = pickle.load(file)
-                file.close()
-                self.encodeListKnown, self.studentIds = encode_list_known_with_ids
+                if os.path.exists(fileName):
+                    with open(fileName, 'rb') as file:
+                        try:
+                            encode_list_known_with_ids = pickle.load(file)
+                            self.encodeListKnown, self.studentIds = encode_list_known_with_ids
+                        except (pickle.UnpicklingError, EOFError) as e:
+                            QMessageBox.critical(self, "Error", f"Error loading file: {str(e)}")
+                            return
+                else:
+                    QMessageBox.warning(self, "File Not Found", f"The file '{fileName}' does not exist.")
+                    return
+            self.text_animation_timer.start(50)  # Adjust timing for each letter
 
     def animate_text(self, full_message):
         if self.text_animation_index <= len(full_message):
@@ -309,6 +342,14 @@ class FaceRecognitionApp(QWidget):
             self.name_label.setText("Name: ")
             self.time_label.setText("Time: ")
             self.date_label.setText("Date: ")
+
+            msg = QMessageBox()
+            msg.setWindowTitle("")
+            msg.setText("Unknown Face")
+            msg.setStandardButtons(QMessageBox.Ok)
+            response = msg.exec_()  # Capture the response
+            if response == QMessageBox.Ok:
+                self.reset_data()
         else:
             # Separate ID and Name from the result
             user_id, user_name = result.split("_", 1)
@@ -355,6 +396,7 @@ class FaceRecognitionApp(QWidget):
     def reset_data(self):
         print("OK button was clicked.")
         self.ready_button.setVisible(True)
+        self.back_button.setVisible(True)
         self.ready_button_clicked = False
         self.id_label.setVisible(False)
         self.time_label.setVisible(False)
@@ -425,16 +467,20 @@ class FaceRecognitionApp(QWidget):
                 faceDis = face_recognition.face_distance(self.encodeListKnown, encodeFace)
 
                 match_index = np.argmin(faceDis)
-                # print("Match Index", matchIndex)
+                faceDisVal = faceDis[match_index]
+                print("Match Index ", match_index,"detectedThres ", faceDisVal)
 
-                if matches[match_index]:
-                    # print("Known Face Detected")
+                # Add a threshold for valid matches
+                threshold = 0.4  # Adjust the threshold based on your requirements
+                if matches[match_index] and faceDisVal < threshold:
                     self.id = self.studentIds[match_index]
                     top, right, bottom, left = faceLoc
                     cv2.rectangle(image, (left, top), (right, bottom), (0, 255, 0), 2)
 
                     # Display text (e.g., 'Face Detected') at the top-left corner of the face
-                    result =   self.id
+                    result = self.id
+                else:
+                    print("Face not recognized or below confidence threshold.")
                 print(self.id)
 
         return result
