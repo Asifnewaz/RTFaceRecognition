@@ -66,7 +66,7 @@ faces /= 255.
 
 x_train, x_test, y_train, y_test = train_test_split(faces,ids, test_size = 0.2, random_state = 0)
 
-checkpoint = callbacks.ModelCheckpoint('trained_model.weights.h5',
+checkpoint = callbacks.ModelCheckpoint('../trained_model.weights.h5',
                                            save_best_only=True, save_weights_only=True, verbose=1)
                                     
 model.fit(x_train, y_train,

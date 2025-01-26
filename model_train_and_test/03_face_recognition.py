@@ -30,7 +30,7 @@ def getImagesAndLabels():
 
 _,ids = getImagesAndLabels()
 model = model((32,32,1),len(set(ids)))
-model.load_weights  ('trained_model.weights.h5')
+model.load_weights  ('../trained_model.weights.h5')
 model.summary()
 
 # Open the file in read mode
