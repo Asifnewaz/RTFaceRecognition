@@ -1,13 +1,10 @@
 import cv2
 import numpy as np
 from PIL import Image
-import os
-
-from keras import backend as K
-from keras.src.utils import to_categorical
-from sklearn.model_selection import train_test_split
-from Model import model
+from keras.src.legacy.preprocessing.image import ImageDataGenerator
 from keras import callbacks
+from keras.src.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, BatchNormalization
+from keras.src.models import Sequential
 
 # Path for face image database
 path = 'dataset'
@@ -22,59 +19,74 @@ def downsample_image(img):
     return np.array(img)
 
 
+# Define image dimensions and path
+IMG_WIDTH, IMG_HEIGHT = 64, 64
+DATASET_PATH = 'dataset'
 
-# function to get the images and label data
-def get_images_and_labels(path):
-    
-    path = 'dataset'
-    imagePaths = [os.path.join(path,f) for f in os.listdir(path)]     
-    faceSamples=[]
-    ids = []
+# Prepare dataset using ImageDataGenerator
+datagen = ImageDataGenerator(
+    rescale=1.0 / 255.0,
+    validation_split=0.2,  # Split 20% for validation
+    rotation_range=20,  # Augmentation: Rotate images
+    width_shift_range=0.2,  # Augmentation: Shift width
+    height_shift_range=0.2,  # Augmentation: Shift height
+    zoom_range=0.2  # Augmentation: Zoom
+)
 
-    for imagePath in imagePaths:
-        
-        #if there is an error saving any jpegs
-        try:
-            PIL_img = Image.open(imagePath).convert('L') # convert it to grayscale
-        except:
-            continue    
-        img_numpy = np.array(PIL_img,'uint8')
+train_generator = datagen.flow_from_directory(
+    DATASET_PATH,
+    target_size=(IMG_WIDTH, IMG_HEIGHT),
+    batch_size=32,
+    color_mode='grayscale',
+    class_mode='categorical',
+    subset='training'
+)
 
-        id = int(os.path.split(imagePath)[-1].split(".")[1])
-        faceSamples.append(img_numpy)
-        ids.append(id)
-    return faceSamples,ids
+validation_generator = datagen.flow_from_directory(
+    DATASET_PATH,
+    target_size=(IMG_WIDTH, IMG_HEIGHT),
+    batch_size=32,
+    color_mode='grayscale',
+    class_mode='categorical',
+    subset='validation'
+)
 
-print ("\n [INFO] Training faces now.")
-faces,ids = get_images_and_labels(path)
-
-K.clear_session()
-n_faces = len(set(ids))
-model = model((32,32,1),n_faces)
-# faces = np.asarray(faces)
-faces = np.array([downsample_image(ab) for ab in faces])
-ids = np.asarray(ids)
-faces = faces[:,:,:,np.newaxis]
-print("Shape of Data: " + str(faces.shape))
-print("Number of unique faces : " + str(n_faces))
+# Get the number of classes
+num_classes = len(train_generator.class_indices)
 
 
-ids = to_categorical(ids)
+# Define the CNN model
+def build_model(input_shape, num_classes):
+    model = Sequential()
+    model.add(Conv2D(32, (3, 3), input_shape=input_shape, activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
 
-faces = faces.astype('float32')
-faces /= 255.
+    model.add(Conv2D(64, (3, 3), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
 
-x_train, x_test, y_train, y_test = train_test_split(faces,ids, test_size = 0.2, random_state = 0)
+    model.add(Conv2D(128, (3, 3), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
 
-checkpoint = callbacks.ModelCheckpoint('../trained_model.weights.h5',
-                                           save_best_only=True, save_weights_only=True, verbose=1)
-                                    
-model.fit(x_train, y_train,
-             batch_size=32,
-             epochs=10,
-             validation_data=(x_test, y_test),
-             shuffle=True,callbacks=[checkpoint])
-             
+    model.add(Flatten())
+    model.add(Dense(128, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(num_classes, activation='softmax'))
 
-# Print the numer of faces trained and end program
-print("\n [INFO] " + str(n_faces) + " faces trained. Exiting Program")
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    return model
+
+
+# Build and summarize the model
+model = build_model((IMG_WIDTH, IMG_HEIGHT, 1), num_classes)
+model.summary()
+
+# Train the model
+checkpoint = callbacks.ModelCheckpoint('../face_recognition_model.keras', save_best_only=True, verbose=1)
+history = model.fit(
+    train_generator,
+    validation_data=validation_generator,
+    epochs=10,
+    callbacks=[checkpoint]
+)
+
+print("\nTraining Complete. Model saved as 'face_recognition_model.keras'")

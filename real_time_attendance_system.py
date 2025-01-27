@@ -407,7 +407,6 @@ class FaceRecognitionApp(QWidget):
     def save_to_spreadsheet(self, result):
         # Define the spreadsheet path
         file_path = "attendance.xlsx"
-
         # Load or create the workbook
         if os.path.exists(file_path):
             workbook = openpyxl.load_workbook(file_path)
@@ -421,23 +420,19 @@ class FaceRecognitionApp(QWidget):
 
         # Separate ID and Name from the result
         id, user_name = result.split("_", 1)
-
         # Get the current date and time
         current_date = datetime.now().strftime("%Y-%m-%d")
         current_time = datetime.now().strftime("%H:%M:%S")
-
         # Check if the ID and date already exist in the sheet
-        # for row in sheet.iter_rows(min_row=2, values_only=True):
-        #     if row[0] == id and row[2] == current_date:
-        #         print("Duplicate entry found. Skipping.")
-        #         return
+        for row in sheet.iter_rows(min_row=2, values_only=True):
+            if row[0] == id and row[2] == current_date:
+                print("Duplicate entry found. Skipping.")
+                return
 
         # Append the data (ID, Name, Date, and Time)
         sheet.append([id, user_name, current_date, current_time])
-
         # Save the workbook
         workbook.save(file_path)
-
         # Save data to Realtime DB for the specific class ID
         self.update_realtime_db(id, user_name, current_date, current_time)
 
@@ -458,7 +453,6 @@ class FaceRecognitionApp(QWidget):
         # # Find all face locations in the frame
         face_locations = face_recognition.face_locations(rgb_image)
         encode_cur_frame = face_recognition.face_encodings(rgb_image, face_locations)
-
         result = "Unknown"
 
         if face_locations:
