@@ -2,16 +2,10 @@ import pickle
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
-from firebase_admin import storage
 import face_recognition
-from keras.src.models import Sequential
-from keras.src.layers import Conv2D, MaxPooling2D, Flatten, Dense
-from keras.src.saving import load_model
-from keras.src.utils import to_categorical
 import tensorflow as tf
 import cv2
 import numpy as np
-from sklearn.model_selection import train_test_split
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QPushButton, QMessageBox, QStackedWidget
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtCore import QTimer, QThread, pyqtSignal, Qt
@@ -39,6 +33,7 @@ class FaceRecognitionApp(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.model = None
         self.id = None
         self.encodeListKnown = None
         self.studentIds = None
@@ -94,12 +89,8 @@ class FaceRecognitionApp(QWidget):
         self.cap = None
         self.timer = None
 
-        # Load CNN model
-        # self.model_path = "pretrained_face_model.h5"
-        # self.model = self.load_model()
-        # self.class_ids = ""  # To store class ID
-        # self.detected_facess = set()
-        self.model = self.load_model()
+        self.cascPath = "model_train_and_test/haarcascade_frontalface_default.xml"  # Path to Haar Cascade XML file
+        self.faceCascade = cv2.CascadeClassifier(self.cascPath)
 
 
     def load_model(self):
@@ -251,21 +242,21 @@ class FaceRecognitionApp(QWidget):
 
     def validate_and_start_video_feed(self):
         if self.encodeListKnown is not None:
+            self.model = self.load_model()
             self.start_video_feed()
         else:
             self.stack.setCurrentWidget(self.start_page)
 
     def update_countdown(self, value):
-        messages = {3: "Preparing data ...", 2: "Loading data ...", 1: "Fetching data ..."}
+        messages = {3: "Preparing data ...", 2: "Loading model ...", 1: "Fetching model ..."}
         if value in messages:
             full_message = messages[value]
             self.text_animation_index = 0  # Reset animation index
             self.text_animation_timer = QTimer()
             self.text_animation_timer.timeout.connect(lambda: self.animate_text(full_message))
             if value == 1:
-                print("Loading Encode File ...")
                 class_id = self.class_id_input.text().strip()
-                fileName = class_id + "_model.p"
+                fileName = "model_train_and_test/"+ class_id + "_model.p"
                 if os.path.exists(fileName):
                     with open(fileName, 'rb') as file:
                         try:
@@ -448,23 +439,31 @@ class FaceRecognitionApp(QWidget):
         ref.child(student_id).set(student_data)
 
     def process_frame_using_cnn(self, image):
-        # Convert BGR (OpenCV) to RGB (face_recognition library)
-        rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # Convert frame to grayscale for face detection
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-        # Predict the class of the face
-        predictions = self.model.predict(rgb_image)
-        label_index = np.argmax(predictions)
-        confidence = np.max(predictions) * 100  # Get confidence score as percentage
-
+        # Detect faces
+        faces = self.faceCascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
         result = "Unknown"
 
-        # Add a threshold for valid matches
-        threshold = 0.8  # Adjust the threshold based on your requirements
-        if confidence > threshold:
-            self.id = self.studentIds[label_index]
-            result = self.id
-        else:
-            print("Face not recognized or below confidence threshold.")
+        for (x, y, w, h) in faces:
+            # Preprocess the face for the CNN model
+            face = gray[y:y + h, x:x + w]
+            face = cv2.resize(face, (64, 64))  # Resize to match the input shape of the model
+            face = face.astype('float32') / 255.0  # Normalize pixel values
+            face = face.reshape(1, 64, 64, 1)  # Add batch dimension and channel dimension
+
+            # Predict the class of the face
+            predictions = self.model.predict(face)
+            label_index = np.argmax(predictions)
+            confidence = np.max(predictions) * 100  # Get confidence score as percentage
+            # Add a threshold for valid matches
+            threshold = 0.8  # Adjust the threshold based on your requirements
+            if confidence > threshold:
+                self.id = self.studentIds[label_index]
+                result = self.id
+            else:
+                print("Face not recognized or below confidence threshold.")
 
         return result
 
@@ -482,11 +481,6 @@ class FaceRecognitionApp(QWidget):
         # Convert BGR (OpenCV) to RGB (face_recognition library)
         rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         cnn_result = self.process_frame_using_cnn(image)
-
-        # Predict the class of the face
-        predictions = self.model.predict(rgb_image)
-        label_index = np.argmax(predictions)
-        confidence = np.max(predictions) * 100  # Get confidence score as percentage
 
         # # Find all face locations in the frame
         face_locations = face_recognition.face_locations(rgb_image)
