@@ -7,21 +7,15 @@ from keras.src.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, Batc
 from keras.src.models import Sequential
 
 # Path for face image database
-path = 'dataset'
+path = '../dataset'
 
 recognizer = cv2.face.LBPHFaceRecognizer_create()
 detector = cv2.CascadeClassifier("haarcascade_frontalface_default.xml");
 
 
-def downsample_image(img):
-    img = Image.fromarray(img.astype('uint8'), 'L')
-    img = img.resize((32,32), Image.LANCZOS)
-    return np.array(img)
-
-
 # Define image dimensions and path
 IMG_WIDTH, IMG_HEIGHT = 64, 64
-DATASET_PATH = 'dataset'
+DATASET_PATH = '../dataset'
 
 # Prepare dataset using ImageDataGenerator
 datagen = ImageDataGenerator(

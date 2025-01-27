@@ -8,6 +8,7 @@ from keras.src.models import Sequential
 from keras.src.layers import Conv2D, MaxPooling2D, Flatten, Dense
 from keras.src.saving import load_model
 from keras.src.utils import to_categorical
+import tensorflow as tf
 import cv2
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -98,12 +99,12 @@ class FaceRecognitionApp(QWidget):
         # self.model = self.load_model()
         # self.class_ids = ""  # To store class ID
         # self.detected_facess = set()
+        self.model = self.load_model()
 
 
     def load_model(self):
         try:
-            model = load_model(self.model_path, compile=False)
-            model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+            model = tf.keras.models.load_model('../face_recognition_model.keras')
             return model
         except Exception as e:
             print(f"Failed to load model: {e}")
@@ -446,9 +447,46 @@ class FaceRecognitionApp(QWidget):
         }
         ref.child(student_id).set(student_data)
 
+    def process_frame_using_cnn(self, image):
+        # Convert BGR (OpenCV) to RGB (face_recognition library)
+        rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        # Predict the class of the face
+        predictions = self.model.predict(rgb_image)
+        label_index = np.argmax(predictions)
+        confidence = np.max(predictions) * 100  # Get confidence score as percentage
+
+        result = "Unknown"
+
+        # Add a threshold for valid matches
+        threshold = 0.8  # Adjust the threshold based on your requirements
+        if confidence > threshold:
+            self.id = self.studentIds[label_index]
+            result = self.id
+        else:
+            print("Face not recognized or below confidence threshold.")
+
+        return result
+
+    def open_add_person_page(self):
+        class_id = self.class_id_input.text().strip()
+        self.add_person_page = AddPersonPage(class_id)
+        self.add_person_page.show()
+
+    def closeEvent(self, event):
+        if self.cap:
+            self.cap.release()
+        event.accept()
+
     def process_frame(self, image):
         # Convert BGR (OpenCV) to RGB (face_recognition library)
         rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        cnn_result = self.process_frame_using_cnn(image)
+
+        # Predict the class of the face
+        predictions = self.model.predict(rgb_image)
+        label_index = np.argmax(predictions)
+        confidence = np.max(predictions) * 100  # Get confidence score as percentage
 
         # # Find all face locations in the frame
         face_locations = face_recognition.face_locations(rgb_image)
@@ -478,16 +516,6 @@ class FaceRecognitionApp(QWidget):
                 print(self.id)
 
         return result
-
-    def open_add_person_page(self):
-        class_id = self.class_id_input.text().strip()
-        self.add_person_page = AddPersonPage(class_id)
-        self.add_person_page.show()
-
-    def closeEvent(self, event):
-        if self.cap:
-            self.cap.release()
-        event.accept()
 
 if __name__ == "__main__":
     app = QApplication([])

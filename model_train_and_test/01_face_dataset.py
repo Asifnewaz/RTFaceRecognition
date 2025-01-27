@@ -15,10 +15,10 @@ print("\n [INFO] Initializing face capture. Look the camera and wait ...")
 count = 0
 
 
-file_path = 'dataset/labels.txt'
+file_path = '../dataset/labels.txt'
 
-if not os.path.exists('dataset'):
-    os.mkdir('dataset')
+if not os.path.exists('../dataset'):
+    os.mkdir('../dataset')
 
 
 # Check if the file exists
