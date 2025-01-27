@@ -15,9 +15,6 @@ model = tf. keras. models. load_model('../face_recognition_model.keras')
 # Class labels (replace with your dataset class indices)
 class_labels = {0: "Asif", 1: "Mukit", 2: "Kamrul"}
 
-cascPath = "haarcascade_frontalface_default.xml"
-faceCascade = cv2.CascadeClassifier(cascPath)
-
 # Load Haar Cascade for face detection
 cascPath = "haarcascade_frontalface_default.xml"  # Path to Haar Cascade XML file
 faceCascade = cv2.CascadeClassifier(cascPath)

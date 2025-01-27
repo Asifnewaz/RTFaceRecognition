@@ -137,7 +137,7 @@ class AddPersonPage(QWidget):
             self.timer.stop()
 
         # Call the encode generator function
-        TrainData.generate_encodings(self.class_id)
+        TrainData.train_model(self.class_id)
         self.close()
 
     def closeEvent(self, event):
