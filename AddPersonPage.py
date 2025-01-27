@@ -72,7 +72,7 @@ class AddPersonPage(QWidget):
     def start_capturing(self):
         self.image_count = 0
         self.capture_images = True
-        self.counter_label.setText("Captured: 0/50")
+        self.counter_label.setText("Captured: 0")
 
     def update_feed(self):
         ret, frame = self.cap.read()
@@ -108,18 +108,19 @@ class AddPersonPage(QWidget):
 
             if self.capture_images and self.image_count < 50:
                 # Save the frame
-                os.makedirs("captured_images", exist_ok=True)
                 student_id = self.student_id_input.text().strip()
                 student_name = self.student_name_input.text().strip()
+                dir_name = f"dataset/{student_name}"
+                os.makedirs(dir_name, exist_ok=True)
 
                 if self.image_count == 0:
                     filename = f"Faces/{student_id}_{student_name}.jpg"
                 else:
-                    filename = f"captured_images/{student_id}_{student_name}_{self.image_count}.jpg"
+                    filename = f"{dir_name}/{student_id}_{student_name}_{self.image_count}.jpg"
 
                 cv2.imwrite(filename, frame)
                 self.image_count += 1
-                self.counter_label.setText(f"Captured: {self.image_count}/50")
+                self.counter_label.setText(f"Captured: {self.image_count}")
 
             if self.image_count >= 50:
                 self.capture_images = False  # Stop capturing

@@ -104,7 +104,7 @@ class FaceRecognitionApp(QWidget):
 
     def load_model(self):
         try:
-            model = tf.keras.models.load_model('../face_recognition_model.keras')
+            model = tf.keras.models.load_model('face_recognition_model.keras')
             return model
         except Exception as e:
             print(f"Failed to load model: {e}")
