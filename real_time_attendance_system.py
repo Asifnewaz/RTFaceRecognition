@@ -248,7 +248,7 @@ class FaceRecognitionApp(QWidget):
             self.stack.setCurrentWidget(self.start_page)
 
     def update_countdown(self, value):
-        messages = {3: "Preparing data ...", 2: "Loading model ...", 1: "Fetching model ..."}
+        messages = {3: "Preparing data ...", 2: "Fetching model ...", 1: "Loading model ..."}
         if value in messages:
             full_message = messages[value]
             self.text_animation_index = 0  # Reset animation index
