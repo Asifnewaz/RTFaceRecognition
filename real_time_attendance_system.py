@@ -408,7 +408,7 @@ class FaceRecognitionApp(QWidget):
         sheet = workbook.active
         # Check if the headers exist
         if sheet.max_row == 1:
-            sheet.append(["ID", "Name", "Date", "Time"])
+            sheet.append(["Class ID", "ID", "Name", "Date", "Time"])
 
         # Separate ID and Name from the result
         id, user_name = result.split("_", 1)
@@ -416,13 +416,13 @@ class FaceRecognitionApp(QWidget):
         current_date = datetime.now().strftime("%Y-%m-%d")
         current_time = datetime.now().strftime("%H:%M:%S")
         # Check if the ID and date already exist in the sheet
-        for row in sheet.iter_rows(min_row=2, values_only=True):
-            if row[0] == id and row[2] == current_date:
+        for row in sheet.iter_rows(min_row=3, values_only=True):
+            if row[1] == id and row[3] == current_date:
                 print("Duplicate entry found. Skipping.")
                 return
 
         # Append the data (ID, Name, Date, and Time)
-        sheet.append([id, user_name, current_date, current_time])
+        sheet.append([self.class_id, id, user_name, current_date, current_time])
         # Save the workbook
         workbook.save(file_path)
         # Save data to Realtime DB for the specific class ID
